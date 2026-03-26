@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Type tests
+        run: npx vitest --typecheck --run
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify CJS
+        run: node -e "const {dur} = require('./dist/index.cjs'); console.log(dur('2h 30m'))"
+
+      - name: Verify ESM
+        run: node --input-type=module -e "import {dur} from './dist/index.js'; console.log(dur('2h 30m'))"
+
+      - name: Pack dry run
+        run: npm pack --dry-run
