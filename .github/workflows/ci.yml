@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22, 24]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
@@ -34,9 +34,15 @@ jobs:
         run: npm run typecheck
 
       - name: Test with coverage
+        if: matrix.node-version >= 22
         run: npm run test:coverage
 
+      - name: Test
+        if: matrix.node-version < 22
+        run: npm test
+
       - name: Type tests
+        if: matrix.node-version >= 22
         run: npx vitest --typecheck --run
 
       - name: Build
